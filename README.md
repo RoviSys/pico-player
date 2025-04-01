@@ -27,6 +27,26 @@ git clone https://github.com/RoviSys/pico-player.git -b hackathon
 
 # Hackathon
 
+## Step 1 - Setup (Above)
+
+## Step 2 - Lint / Testing
+
+## Step 3 - Pico Setup
+
+## Step 4 - Rails
+
+## Step 5 - Lights
+
+## Step 6 - Sound
+
+## Step 7 - Control
+
+At this point, your board should look like this:
+
+![Pico Board](/assets/pico_player_wiring.PNG)
+
+## Step 8 - Mozart
+
 # Contributing
 
 # Licenses
