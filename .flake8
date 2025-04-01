@@ -1,0 +1,6 @@
+[flake8]
+exclude             = .git, # Excluding paths / files we don't want linted
+                      .venv,
+                      .vscode,
+                      requirements/
+max-line-length     = 160

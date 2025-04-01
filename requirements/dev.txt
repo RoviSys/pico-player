@@ -1,0 +1,3 @@
+# Dev-only dependencies
+-r common.txt # Include common requirements
+flake8~=7.0.0
