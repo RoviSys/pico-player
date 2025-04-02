@@ -2,6 +2,11 @@
 Developed for a hackathon, this project walks individuals through the process of wiring, coding, and testing an "analog" media player using simple piezo buzzers and Python on Raspberry PI Pico micro-controllers.
 
 # Getting Started
+Raspberry Pi Pico is a low-cost micro-controller (almost a computer) that is simple to use for low-power applications and control.  Perfect for prototyping, hobbying, and in some limited situations, production use.  At it's core is the `RP2040` or the Raspberry Pi 2040.  This is the primary IC (integrated circuit) or the "brain" of the controller.  The board handles mapping of the pins of the RP2040 to a larger form-factor and delivering many useful features and peripherals.  Below is a pin diagram often called a "pinout" that shows the capabilities of the various "pins" on the Pico (all of which map back to a pin on the black IC in the middle of the board).
+
+![Pico Pinout](/assets/pico_pinout.png)
+
+In this hackathon we'll be building on top of this powerful platform to gain some applied knowledge of software and hardware concepts.
 
 ## Pre-requisites
 To work on this hackathon, some software is needed prior to being able to run the code in this repository.
@@ -13,7 +18,6 @@ To work on this hackathon, some software is needed prior to being able to run th
 - [Raspberry Pi Pico VS Code Extension](https://marketplace.visualstudio.com/items?itemName=raspberry-pi.raspberry-pi-pico) -> [(Download Link⭷)](vscode:extension/raspberry-pi.raspberry-pi-pico)
 
 ## Cloning
-
 ```cmd
 mkdir C:\Projects
 mkdir C:\Projects\hackathon
@@ -28,11 +32,9 @@ git clone https://github.com/RoviSys/pico-player.git -b hackathon
 # Hackathon
 
 ## Step 1 - Setup
-
 Follow the pre-requisite and setup instructions above to get your local environment configured with all the necessary software.  Once the software is installed, clone the repository.
 
 ## Step 2 - Lint / Testing
-
 Python is an interpreted language.  This means that an interpreter reads the source code you write and runs it line-by-line, there is no compilation step.  Python commands and code are run from command line via the `python` executable that is installed when you installed Python on your machine.  Extra components for Python can be installed globally, or through a virtual environment (venv).  A virtual environment is useful if you need to run different versions of Python for different reasons.  The virtual environment enables you to configure / install dependencies LOCAL to the environment, so you don't wind up with conflicts in your global Python installation.
 
 In the source code, the .venv folder contains the virtual environment configuration.  To activate a virtual environment in VS Code, use the *"Terminal"* menu at the top to open a new `Terminal` session.  This often defaults to a `cmd` terminal.  We'll want to switch to a `PowerShell` terminal.
@@ -40,16 +42,16 @@ In the source code, the .venv folder contains the virtual environment configurat
 
 ![Switch to PowerShell](/assets/new_powershell.PNG)
 
-
 ## Step 3 - Pico Setup
-
 ![Pico Breadboard](/assets/pico_wiring_no_rails.PNG)
 
-Place the pico in the middle so there are an even number of open pin-holes on either side and the USB port is easily accessible.  From here, plug the USB cable into the Pico, then the other end into a USB port on your laptop.  
+Place the pico in the middle so there are an even number of open pin-holes on either side and the USB port is easily accessible.  From here, plug the USB cable into the Pico, then the other end into a USB port on your laptop.  Your setup should look like this:
+
+![Pico Breadboard USB Photo](/assets/pico_usb_ph.jpg)
 
 ### Programming
 We could write in c for the Pico. Unless you're a c expert and very familiar with register programming and embedded code this has a very high learning curve.  To reduce this learning curve, we can leverage Python which runs at a higher layer of abstraction.
-To support that, we need firmware that allows us to run Python natively.  MicroPython provides just such a solution.  MicoPython is a platform that runs a limited subset of Python (CPython) that provides a convenient API to access the features of the Pico and runs Python natively on the Pico without needing a full operating system install.
+To support that, we need firmware that allows us to run Python natively.  MicroPython provides just such a solution.  MicroPython is a platform that runs a limited subset of Python (CPython) that provides a convenient API to access the features of the Pico and runs Python natively on the Pico without needing a full operating system install.
 
 Before we can do any work, we need to load a Micro Python uf2 bootloader firmware on the Pico so we can natively run Python code on the Raspberry Pi.
 
@@ -68,6 +70,7 @@ For the Pico, there are two flavors for the Pico 1:
 
 > For more detailed instructions, see here: https://docs.micropython.org/en/latest/rp2/tutorial/intro.html
 
+### Hello, World!
 At this point, your VS Code should automatically detect the new Pico and connect to it using the Pico VS Code Extension.  If it does not, try closing the workspace and re-opening it (with the Pico plugged in and the firmware loaded).  You can confirm this as a new terminal instance will pop up that looks like this:
 
 ![Pico Python REPL in VS Code](/assets/pico_connected_vscode.PNG)
@@ -90,9 +93,34 @@ from machine import (Pin) #  Then hit enter
 Pin(25, Pin.OUT).toggle() # Then hit enter
 ```
 
+If successful, you should see the on-board LED turn on:
+
+![Pico LED on Photo](/assets/pico_led_on_ph.jpg)
+
+Congratulations, you've complete the "Hello, World!" equivalent of a Raspberry Pi Pico with MicroPython.
+
 ## Step 4 - Rails
+The Raspberry Pi Pico can be powered through several different mechanisms:
+
+1. The `VSYS` Pin (**#39**)
+2. USB Power
+
+Like all hardware, certain characteristics determine how much "power" a device requires to operate.  The Pico is flexible and can be powered using a meager *1.8* (V) volts (only a bit more than a single AA battery), up to *5.5V* (often if you're coming from USB).  Delivering a higher voltage or lower voltage can cause damage to the Pico.
+
+Similarly, a lot of electronic devices also have such characteristics.  Most commonly when working with Raspberry Pi's or Arduino's as a hobbyist, components use *3V* or *5V*.  The Pico uses a "buck-boost" converter so any voltage (of at least *1.8V*) can be boosted to *3.3V* on the `3V3(OUT)` pin (**#36**).
+
+For this hackathon, we'll have a couple of devices that run on *3V* logic.  To support these devices, we'll take advantage of the "rails" of the breadboard (the side pieces labelled with + / -) to "extend" the connections so we can power multiple devices in parallel from the Pico's `3V3(OUT)` pin.  We do this by connecting a jumper wire (red is the convention for positive) from row 5 of our breadboard (where the Pico `3V3(OUT)` pin is) to the common "+" rail of the breadboard.
+
+For complete circuits, we also need to ground the common **3V3 rail** we're creating, so we add a black wire to one of the `GND` pins of the Pico (**#37** for example) to the common ground rail "-" of the breadboard.
+
+With this complete, any device that needs *3V* power can be plugged in to the common rail, and grounded to the common ground.
+
+When we run on USB power, the `VBUS` Pin (**#40**) on the Pico exposes the voltage received from the USB connection (which happens to be *5V*).  We also have some components that require *5V* logic, so we run another set of ground / hot wires from the `VBUS` (and another GND pin, like **#3**) to the OPPOSITE rail on the breadboard.
+
+Please see the images below for diagrams and example wiring.
 
 ![Pico Rail Configuration](/assets/pico_wiring_no_lights.PNG)
+![Pico Rail Configuration Photo](/assets/pico_rails_wired_ph.jpg)
 
 ## Step 5 - Lights
 
@@ -109,6 +137,9 @@ At this point, your board should look like this:
 ![Pico Board](/assets/pico_player_wiring.PNG)
 
 ## Step 8 - Mozart
+
+# Resources
+- MicroPython documentation for RP2040 (Pico): 
 
 # Contributing
 
