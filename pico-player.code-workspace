@@ -2,6 +2,10 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"name": "Mpy Remote Workspace",
+			"uri": "pico:"
 		}
 	],
 	"settings": {
@@ -10,6 +14,14 @@
 			"Hackathon",
 			"Pico",
 			"piezo"
+		],
+		"micropico.syncFolder": "src",
+		"micropico.statusbarButtons": [
+			"status",
+			"run",
+			"softreset",
+			"togglepicowfs",
+			"upload"
 		]
 	}
 }
