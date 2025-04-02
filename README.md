@@ -47,14 +47,48 @@ In the source code, the .venv folder contains the virtual environment configurat
 
 Place the pico in the middle so there are an even number of open pin-holes on either side and the USB port is easily accessible.  From here, plug the USB cable into the Pico, then the other end into a USB port on your laptop.  
 
-Before we can do any work, we need to load a Micro Python uf2 bootloader on the Pico so we can natively run Python code on the Raspberry Pi (as it doesn't have it's own OS).
+### Programming
+We could write in c for the Pico. Unless you're a c expert and very familiar with register programming and embedded code this has a very high learning curve.  To reduce this learning curve, we can leverage Python which runs at a higher layer of abstraction.
+To support that, we need firmware that allows us to run Python natively.  MicroPython provides just such a solution.  MicoPython is a platform that runs a limited subset of Python (CPython) that provides a convenient API to access the features of the Pico and runs Python natively on the Pico without needing a full operating system install.
 
-TODO: uf2 load instructions
+Before we can do any work, we need to load a Micro Python uf2 bootloader firmware on the Pico so we can natively run Python code on the Raspberry Pi.
 
-At this point, your VS Code should automatically detect the new Pico and connect to it using the Pico VS Code Extension.
+Firmware is a layer of code that interacts directly with hardware that serves as an abstraction for high-level software to be written independent of low-level register programming / hardware integration.
+The firmware type depends on the micro controller in use and MicroPython is compatible with MANY different processors and micro controllers.
+
+For the Pico, there are two flavors for the Pico 1:
+
+- Pico https://micropython.org/download/RPI_PICO/
+- Pico W (wireless) - https://micropython.org/download/RPI_PICO_W/
+
+1. Download the appropriate firmware version for the Pico you're using.
+2. When the download is complete, you should see the Pico as a new "drive" on your computer
+3. Copy the uf2 file you downloaded to the root of the Raspberry Pi Pico "drive"
+4. Doing so will cause the Pico to re-start.  When it re-starts you will NO LONGER see it in your "drive" list.
+
+> For more detailed instructions, see here: https://docs.micropython.org/en/latest/rp2/tutorial/intro.html
+
+At this point, your VS Code should automatically detect the new Pico and connect to it using the Pico VS Code Extension.  If it does not, try closing the workspace and re-opening it (with the Pico plugged in and the firmware loaded).  You can confirm this as a new terminal instance will pop up that looks like this:
+
+![Pico Python REPL in VS Code](/assets/pico_connected_vscode.PNG)
 
 Now we'll test things out by blinking the on-board LED on the pico.
 
+We can issue commands through the REPL (Read-Eval-Print Loop is an abbreviation essentially for a command-line interpreter) directly to the Pico to test things out.
+
+Write the following line of code in the REPL next to the `>>>`
+
+```py
+# Pico W
+from machine import (Pin) # Then hit enter
+
+Pin("LED", Pin.OUT).toggle() # Then hit enter
+
+# if you have a Pico
+from machine import (Pin) #  Then hit enter
+
+Pin(25, Pin.OUT).toggle() # Then hit enter
+```
 
 ## Step 4 - Rails
 
