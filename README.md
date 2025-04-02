@@ -43,7 +43,7 @@ In the source code, the .venv folder contains the virtual environment configurat
 ![Switch to PowerShell](/assets/new_powershell.PNG)
 
 ## Step 3 - Pico Setup
-![Pico Breadboard](/assets/pico_wiring_no_rails.PNG)
+![Pico Breadboard](/assets/pico_player_wiring_no_rails.jpg)
 
 Place the pico in the middle so there are an even number of open pin-holes on either side and the USB port is easily accessible.  From here, plug the USB cable into the Pico, then the other end into a USB port on your laptop.  Your setup should look like this:
 
@@ -119,22 +119,33 @@ When we run on USB power, the `VBUS` Pin (**#40**) on the Pico exposes the volta
 
 Please see the images below for diagrams and example wiring.
 
-![Pico Rail Configuration](/assets/pico_wiring_no_lights.PNG)
+![Pico Rail Configuration](/assets/pico_player_wiring_no_lights.jpg)
 ![Pico Rail Configuration Photo](/assets/pico_rails_wired_ph.jpg)
 
 ## Step 5 - Lights
 
-![Pico Lights Wiring](/assets/pico_player_wiring_no_sound.PNG)
+The LEDs need *5V* power.  These LEDs are individually addressable via a tiny, embedded micro-controller within the LED that does the color shifting for you.  The color and brightness is sent via the `DIN` or Data In lead, `PWR` goes to the second lead, `GND` goes to the third lead, and `DOUT` or Data Out is the fourth.  By connecting the in / out of successive LEDs, we can create an array of addressable LEDs.
+
+Each `PWR` lead gets a red wire up to the *5V* common power ("+") rail.
+Each `GND` lead gets a black wire up to the *5V* common ground ("-") rail.
+
+The first LED `DIN` pin gets a yellow (or pick your choice) wire connected to pin **#20** `(GPIO 15)`, while the `DOUT` of the first LED gets connected to the `DIN` of the second LED, thus completing our wiring.
+
+TODO: More here and we have to load some code onto the pico.
+
+![Pico Lights Wiring](/assets/pico_player_wiring_no_sound.jpg)
+![Pico Lights Breadboard Photo](/assets/pico_lights_wired_ph.jpg)
+![Pico Lights Breadboard Illuminated](/assets/pico_lights_wired_illuminated_ph.jpg)
 
 ## Step 6 - Sound
 
-![Pico Sound Wiring](/assets/pico_player_wiring_no_button.PNG)
+![Pico Sound Wiring](/assets/pico_player_wiring_no_button.jpg)
 
 ## Step 7 - Control
 
 At this point, your board should look like this:
 
-![Pico Board](/assets/pico_player_wiring.PNG)
+![Pico Board](/assets/pico_player_wiring.jpg)
 
 ## Step 8 - Mozart
 
