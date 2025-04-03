@@ -12,9 +12,6 @@ class SoundProvider:
         :param sound_driver: The driver used to output sound info."""
         self._sound_driver = sound_driver
 
-    def _silent(self):
-        self._sound_driver.quiet()
-
     def play_song(self, song: Song):
         """Plays the given song.
         :param song: The song to play."""
