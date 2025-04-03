@@ -11,6 +11,7 @@
 	"settings": {
 		"python.languageServer": "Pylance",
 		"cSpell.words": [
+			"deinit",
 			"Hackathon",
 			"Pico",
 			"piezo"

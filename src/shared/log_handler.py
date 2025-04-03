@@ -21,7 +21,7 @@ class LogHandler:
 
     def format(self, record: LogRecord) -> str:
         return self.formatter.format(record)
-    
+
     def emit(self, record: LogRecord):
         """Emits the error
         :param record: The LogRecord instance to log"""

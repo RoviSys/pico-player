@@ -140,12 +140,14 @@ TODO: More here and we have to load some code onto the pico.
 ## Step 6 - Sound
 
 ![Pico Sound Wiring](/assets/pico_player_wiring_no_button.jpg)
+![Pico Sound Wiring Photo](/assets/pico_sound_ph.jpg)
 
 ## Step 7 - Control
 
 At this point, your board should look like this:
 
 ![Pico Board](/assets/pico_player_wiring.jpg)
+![Pico Board Photo](/assets/pico_sound_button_ph.jpg)
 
 ## Step 8 - Mozart
 

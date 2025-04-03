@@ -30,7 +30,6 @@ class LEDManager:
         """Turns off all of the LEds in the array."""
         dimmer_ar = array.array("I", [0 for _ in range(self.led_count())])
         for i in range(self.led_count()):
-            #print (t, "-", (c >> 8), (c >> 16), c, "-", ((current_color[0]), (current_color[1]<<16), (current_color[2])))
             dimmer_ar[i] = 0
         self._state_machine.put(dimmer_ar, 8)
         self._sleep_ten()
@@ -74,7 +73,7 @@ class LEDManager:
             g = int(((current_color >> 8) & 0xFF) * brightness)
             r = int(((current_color >> 16) & 0xFF) * brightness)
             b = int((current_color & 0xFF) * brightness)
-            dimmer_ar.append((g<<16) + (r<<8) + b)
+            dimmer_ar.append((g << 16) + (r << 8) + b)
         self._state_machine.put(array.array("I", dimmer_ar), 8)
         self._sleep_ten()
 
