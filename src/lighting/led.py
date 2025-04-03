@@ -33,4 +33,4 @@ class LED:
 
     def current_color(self) -> int:
         """Returns the binary shifted color for display."""
-        return (self._red<<16)+(self._green<<8)+self._blue
+        return (self._red << 16) + (self._green << 8) + self._blue

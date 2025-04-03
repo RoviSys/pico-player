@@ -1,10 +1,11 @@
 from log_record import (LogRecord)
 import time
 
+
 class LogFormatter:
 
-    _default_fmt:str = "%(level)s:%(name)s:%(message)s"
-    _default_datefmt:str = "%Y-%m-%d %H:%M:%S"
+    _default_fmt: str = "%(level)s:%(name)s:%(message)s"
+    _default_datefmt: str = "%Y-%m-%d %H:%M:%S"
     _level_dict: dict = {
         0: "Debug",
         1: "Info",
@@ -12,7 +13,7 @@ class LogFormatter:
         3: "Error"
     }
 
-    def __init__(self, fmt:str | None = None, datefmt:str | None = None):
+    def __init__(self, fmt: str | None = None, datefmt: str | None = None):
         self.fmt = self._default_fmt if fmt is None else fmt
         self.datefmt = self._default_datefmt if datefmt is None else datefmt
 

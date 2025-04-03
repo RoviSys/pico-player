@@ -13,7 +13,7 @@ class Colors:
 
     @staticmethod
     def CUSTOM(red: int, green: int, blue: int) -> tuple[int, int, int]:
-        """Use this method to define a custom RGB color for showing.  Keep in mind that not all LEDs will show the given color well (orange and brown are tricky).
+        """Use this method to define a custom RGB color for showing.  Note that not all LEDs will show the given color well (orange and brown are tricky).
         :param red: The amount of red (0 - 255).
         :param green: The amount of green (0 - 255).
         :param blue: The amount of blue (0 - 255)."""

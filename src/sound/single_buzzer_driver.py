@@ -17,7 +17,7 @@ class SingleBuzzerDriver(SoundDriver):
         super().__init__(logger)
         self._buzzer = PWM(Pin(gpio_num), duty_u16=int(constants.MAX_INT//2))
         self._buzzer.init()
-    
+
     def _get_duration(self, tone_data: tuple[str, float, int]) -> float:
         return 0.6 * tone_data[1]
 

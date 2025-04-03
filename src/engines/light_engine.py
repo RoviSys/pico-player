@@ -1,8 +1,9 @@
-from lighting import (LEDManager, Colors)
+from lighting import (LEDManager)
 from shared import (Logger)
-from drivers import (ws2812, create_state_machine)
+from drivers import (create_state_machine)
 import rp2
 import time
+
 
 class LightEngine:
     """Engine used to encapsulate logic for controlling LEDs and sequencing."""
@@ -22,7 +23,7 @@ class LightEngine:
         self._sm.active(1)
         self._light_logger = Logger('lights')
         self._light_manager = LEDManager(self._sm, ["1", "2"], self._light_logger)
-    
+
     def light_all_for_duration(self, duration: int, color: tuple[int, int, int], brightness: float | None = None):
         self._light_logger.debug('Lighting all LEDs for ' + str(duration) + ' seconds.')
         self._light_manager.set_color_for_all(color)
@@ -30,7 +31,7 @@ class LightEngine:
         time.sleep(duration)
         self._light_manager.hide_all()
         self._light_logger.debug('done')
-    
+
     def rainbow_cycle(self, wait: float):
         self._light_logger.debug("Starting rainbow cycle.")
         for j in range(255):
@@ -40,7 +41,7 @@ class LightEngine:
             self._light_manager.set_brightness_for_all(self._default_brightness)
             time.sleep(wait)
         self._light_logger.debug("Cycle finished")
-    
+
     def all_off(self):
         self._light_manager.hide_all()
 
