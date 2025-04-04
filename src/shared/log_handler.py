@@ -5,22 +5,20 @@ from log_formatter import (LogFormatter)
 
 class LogHandler:
     _formatter: LogFormatter
+    _level: int
 
     def __init__(self, level=LogLevel.DEBUG, formatter=LogFormatter()):
-        self.level = level
-        self.formatter = formatter
+        self._level = level
+        self._formatter = formatter
 
     def close(self):
         pass
 
-    def set_level(self, level: LogLevel):
-        self.level = level
+    def set_level(self, level: int):
+        self._level = level
 
-    def set_formatter(self, formatter: LogFormatter):
-        self.formatter = formatter
-
-    def format(self, record: LogRecord) -> str:
-        return self.formatter.format(record)
+    def format_output(self, record: LogRecord) -> str:
+        return self._formatter.format_message(record)
 
     def emit(self, record: LogRecord):
         """Emits the error

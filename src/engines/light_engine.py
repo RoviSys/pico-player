@@ -1,5 +1,5 @@
 from lighting import (LEDManager)
-from shared import (Logger)
+from shared import (Logger, LogLevel)
 from drivers import (create_state_machine)
 import rp2
 import time
@@ -14,15 +14,16 @@ class LightEngine:
     _light_logger: Logger
     _light_manager: LEDManager
 
-    def __init__(self, led_gpio: int, default_brightness: float = 0.5):
+    def __init__(self, led_gpio: int, led_names: list[str], interrupt, default_brightness: float = 0.5):
         self._default_brightness = default_brightness
         self._led_gpio = led_gpio
 
         self._sm = create_state_machine(self._led_gpio)
         self._sm.restart()
         self._sm.active(1)
-        self._light_logger = Logger('lights')
-        self._light_manager = LEDManager(self._sm, ["1", "2"], self._light_logger)
+        self._light_logger = Logger('lights', LogLevel.INFO)
+        self._light_manager = LEDManager(self._sm, led_names, self._light_logger)
+        self._interrupt = interrupt
 
     def light_all_for_duration(self, duration: int, color: tuple[int, int, int], brightness: float | None = None):
         self._light_logger.debug('Lighting all LEDs for ' + str(duration) + ' seconds.')
@@ -31,6 +32,12 @@ class LightEngine:
         time.sleep(duration)
         self._light_manager.hide_all()
         self._light_logger.debug('done')
+    
+    def run(self):
+        while self._interrupt() == False:
+            self.rainbow_cycle(0)
+            
+        self.all_off()
 
     def rainbow_cycle(self, wait: float):
         self._light_logger.debug("Starting rainbow cycle.")

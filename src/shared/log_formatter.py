@@ -13,20 +13,19 @@ class LogFormatter:
         3: "Error"
     }
 
-    def __init__(self, fmt: str | None = None, datefmt: str | None = None):
+    def __init__(self, fmt: str | None = None):
         self.fmt = self._default_fmt if fmt is None else fmt
-        self.datefmt = self._default_datefmt if datefmt is None else datefmt
 
     def uses_time(self):
         return "asctime" in self.fmt
 
-    def format_time(self, datefmt: str, record: LogRecord):
+    def format_time(self, record: LogRecord):
         local_time = time.localtime(record.ct)
         return "{}/{}/{} {}:{}.{}".format(local_time[0], local_time[1], local_time[2], local_time[3], local_time[4], local_time[5])
 
-    def format(self, record: LogRecord):
+    def format_message(self, record: LogRecord):
         if self.uses_time():
-            record.asctime = self.format_time(self.datefmt, record)
+            record.asctime = self.format_time(record)
         return self.fmt % {
             "name": record.name,
             "message": record.message,

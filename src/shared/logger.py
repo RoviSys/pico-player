@@ -50,4 +50,5 @@ class Logger:
         :param level: The level of the log, which is compared against configuration of the logger.
         :param message: The message to write."""
         record = LogRecord(self.__name, level, message)
-        self._handler.emit(record)
+        if (record.level >= self._handler._level):
+            self._handler.emit(record)

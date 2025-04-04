@@ -9,4 +9,5 @@ class PicoHandler(LogHandler):
         super().__init__(level, formatter)
 
     def emit(self, record: LogRecord):
-        print(self.format(record))
+        if (record.level >= self._level):
+            print(self.format_output(record))
