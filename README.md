@@ -124,6 +124,8 @@ Please see the images below for diagrams and example wiring.
 
 ## Step 5 - Lights
 
+### Electronics
+
 The LEDs need *5V* power.  These LEDs are individually addressable via a tiny, embedded micro-controller within the LED that does the color shifting for you.  The color and brightness is sent via the `DIN` or Data In lead, `PWR` goes to the second lead, `GND` goes to the third lead, and `DOUT` or Data Out is the fourth.  By connecting the in / out of successive LEDs, we can create an array of addressable LEDs.
 
 Each `PWR` lead gets a red wire up to the *5V* common power ("+") rail.
@@ -131,11 +133,229 @@ Each `GND` lead gets a black wire up to the *5V* common ground ("-") rail.
 
 The first LED `DIN` pin gets a yellow (or pick your choice) wire connected to pin **#20** `(GPIO 15)`, while the `DOUT` of the first LED gets connected to the `DIN` of the second LED, thus completing our wiring.
 
-TODO: More here and we have to load some code onto the pico.
-
+Here is the diagram of how this should look:
 ![Pico Lights Wiring](/assets/pico_player_wiring_no_sound.jpg)
+
+When you're done wiring, your setup should look similar to this:
+
 ![Pico Lights Breadboard Photo](/assets/pico_lights_wired_ph.jpg)
-![Pico Lights Breadboard Illuminated](/assets/pico_lights_wired_illuminated_ph.jpg)
+![Pico Lights Breadboard Illuminated Photo](/assets/pico_lights_wired_illuminated_ph.jpg)
+
+### Coding
+
+Having loaded the `*.uf2` firmware onto the Pico and with VSCode connected, you can also push code directly to the Pico.  For now, just create a new Python file. You can name it whatever you like with a `.py` extension.
+
+As we mentioned before, these are not your average LEDs.  These are `WS2812` LEDs that have controllers built-in to make changing colors easier from just software.  To do this, we need several different components:
+
+1. The Raspberry Pi Pico has an internal state machine that can be used to control / time the register on each LED
+2. This state machine is exposed via a MicroPython extension that is SPECIFIC to the Raspberry Pi Pico
+
+You may have noticed that with your Pico plugged in and your LEDs wired that the first one is illuminated (often blue).  This is because it's receiving power but not data.  To address this let's write some code that uses the state machine of the Pico.
+
+Add this to your source file:
+
+```python
+import rp2
+from machine import (Pin)
+import array, time
+
+@rp2.asm_pio(sideset_init=rp2.PIO.OUT_LOW, out_shiftdir=rp2.PIO.SHIFT_LEFT, autopull=True, pull_thresh=24) # Line 4
+def ws2812():
+    """WS2812 driver for LEDs on the RP2040 state machine (Raspberry PI specific)."""
+    T1 = 2
+    T2 = 5
+    T3 = 3
+    wrap_target()  # type: ignore # noqa: F821
+    label("bitloop")  # type: ignore # noqa: F821
+    out(x, 1)               .side(0)[T3 - 1]  # type: ignore # noqa: F821
+    jmp(not_x, "do_zero")   .side(1)[T1 - 1]  # type: ignore # noqa: F821
+    jmp("bitloop")          .side(1)[T2 - 1]  # type: ignore # noqa: F821
+    label("do_zero")  # type: ignore # noqa: F821
+    nop()                   .side(0)[T2 - 1]  # type: ignore # noqa: F821
+    wrap()  # type: ignore # noqa: F821
+
+
+def create_state_machine(gpio_num: int) -> rp2.StateMachine: # Line 20
+    """Creates a StateMachine instance sending output on the given pin.
+    :param pin_num: The pin number to send output of the state machine to."""
+    sm = rp2.StateMachine(0, ws2812, freq=8_000_000, sideset_base=Pin(gpio_num))  # type: ignore
+
+    return sm
+
+```
+
+This is the base code for the state machine.  The `rp2` import enables us to use the decorator on line **`4`** and use the functions being called on lines **`10-17`**.  The `ws2812` function contains the "timings" for the LED.  An in-depth explanation is outside the scope of this hackathon.  For further reading, check out:
+- https://wp.josh.com/2014/05/13/ws2812-neopixels-are-not-so-finicky-once-you-get-to-know-them/
+- https://cpldcpu.com/2014/01/14/light_ws2812-library-v2-0-part-i-understanding-the-ws2812/
+
+Next, we have the `create_state_machine` method, which takes in a GPIO Pin Number as an argument, sets the frequency the LEDs run at and provides the `ws2812` method to the state machine for controlling the timings.
+
+To make all of this work we need a bit more code.  Add the following lines of code:
+
+```python
+
+# Configure the number of WS2812 LEDs.
+NUM_LEDS = 2
+PIN_NUM = 15 # The gpio we have the LED hooked to above
+brightness = 0.5 # These are bright, so you might want to drop this down further.  A number between 0 and 1
+
+sm = create_state_machine(PIN_NUM)
+
+# Start the StateMachine, it will wait for data on its FIFO.
+sm.active(1)
+
+# Display a pattern on the LEDs via an array of LED RGB values.
+ar = array.array("I", [0 for _ in range(NUM_LEDS)])
+
+##########################################################################
+def pixels_show():
+    """Illuminates the pixels by setting the colors assigned in the stored array in memory to the state machine and sets the brightness to the default"""
+    dimmer_ar = array.array("I", [0 for _ in range(NUM_LEDS)])
+    for i,c in enumerate(ar):
+        r = int(((c >> 8) & 0xFF) * brightness)
+        g = int(((c >> 16) & 0xFF) * brightness)
+        b = int((c & 0xFF) * brightness)
+        dimmer_ar[i] = (g << 16) + (r << 8) + b
+    sm.put(dimmer_ar, 8)
+    time.sleep_ms(10)
+
+def pixels_set(i: int, color : tuple[int, int, int]):
+    """Sets an individual pixel (addressed by array index) to the given color.
+    :param i: The index of the LED in the array.
+    :param color: The color tuple (r, g, b) to assign."""
+    ar[i] = (color[0] << 16) + (color[1] << 8) + color[2]
+
+def pixels_fill(color: tuple[int, int, int]):
+    """Fills all pixels in the array with the given color.
+    :param color: The color tuple (r, g, b) to assign."""
+    for i in range(len(ar)):
+        pixels_set(i, color)
+
+# Define colors for ease of use
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+YELLOW = (255, 150, 0)
+ORANGE = (200, 50, 0) # Orange is a hard color for WS2812 LEDs
+GREEN = (0, 255, 0)
+CYAN = (0, 255, 255)
+BLUE = (0, 0, 255)
+PURPLE = (180, 0, 255)
+WHITE = (255, 255, 255)
+PINK = (230, 120, 80) # Pink is a hard color for WS2812 LEDs
+COLORS = (BLACK, RED, YELLOW, GREEN, CYAN, BLUE, PURPLE, WHITE, PINK, ORANGE)
+
+pixels_fill(CYAN)
+pixels_show()
+
+```
+
+After entering the code above into your file, click the "Run" button in the status bar of VS Code to send the file to the REPL (and for the Pico to run).
+
+Did you get the LEDs to light up?  Try experimenting with the colors.  Set different pixels to different colors or even create your own colors.
+
+You can also create effects with the LEDs using simple control structures and some math.
+
+Try these by adding each to your python file and hitting "play" again:
+
+```python
+def show_all_colors():
+    """Loops over all of the given colors in the 'Colors' tuple and updates the array of LEDs for each color, pausing slightly in-between each color."""
+    print('Rotating between all colors')
+    for color in COLORS:       
+        pixels_fill(color)
+        pixels_show()
+        time.sleep(0.2)
+
+show_all_colors()
+
+```
+
+In the above code, it's a simple rotation that loops through all the colors, setting them for all the LEDs.
+
+```python
+
+def wheel(pos: int):
+    """Creates a color 'wheel' by rotating RGB values through the whole spectrum.  Intended to be combined with other lighting effects.
+    :pos: The current color value (from 0 - 255)."""
+    if pos < 0 or pos > 255:
+        return (0, 0, 0)
+    if pos < 85:
+        return (255 - pos * 3, pos * 3, 0)
+    if pos < 170:
+        pos -= 85
+        return (0, 255 - pos * 3, pos * 3)
+    pos -= 170
+    return (pos * 3, 0, 255 - pos * 3)
+ 
+ 
+def rainbow_cycle(wait: int):
+    """Creates a rainbow effect with each LED fading between colors.
+    :param wait: The amount of time to wait between color changes."""
+    for j in range(255):
+        for i in range(NUM_LEDS):
+            rc_index = (i * 256 // NUM_LEDS) + j
+            pixels_set(i, wheel(rc_index & 255))
+        pixels_show()
+        time.sleep(wait)
+
+rainbow_cycle(0)
+
+```
+
+The above code creates a nice rainbow effect.
+
+
+```python
+
+def fade_in(rgb: tuple[int, int, int], speed: float = 0):
+    """Fades the given color in at the given speed.
+    :param rgb: The color to fade to.
+    :param speed: Smaller speeds are faster.  1 is EXTREMELY SLOW, 0.01 is a good starting point."""
+    step = 10
+    breath_amps = [ii for ii in range(0,255,step)]
+    for ii in breath_amps:
+        for jj in range(NUM_LEDS):
+            pixels_set(jj, rgb) # show all colors
+        pixels_show(ii/255)
+        time.sleep(speed)
+
+def fade_out(rgb: tuple[int, int, int], speed: float = 0):
+    """Fades the given color out at the given speed.
+    :param rgb: The color to fade from.
+    :param speed: Smaller speeds are faster.  1 is EXTREMELY SLOW, 0.01 is a good starting point."""
+    step = 5
+    breath_amps = [ii for ii in range(255,-1,-step)]
+    for ii in breath_amps:
+        for jj in range(NUM_LEDS):
+            pixels_set(jj, rgb) # show all colors
+        pixels_show(ii/255)
+        time.sleep(speed)
+
+def fade_colors():
+    """Fades each color in, then out."""
+    for color in COLORS:
+        fade_in(color, 0.01)
+        fade_out(color, 0.01)
+
+fade_colors()
+
+```
+
+With this, your LEDs are completely tested and we're ready to move on to the next phase!
+
+A quick note on organization.  As you can see, your file is probably quite long at this point with a bunch of variables scattered in different places.  This is okay for prototyping, but it makes it MUCH harder to manager.  Python has the ability to import files from other files to help keep things separated.  We can also create "modules" for import that further improve our organization.
+
+However, the Pico can NOT load files from your machine's hard drive.  In order for imports to work as expected they have to be on the file-system of the Raspberry Pi.
+
+In the status bar of VS Code, you should see a button for "Toggle Mpy FS".  Click this button.
+![MicroPico Show FileSystem](/assets/toggle_mpy_filesystem.PNG)
+
+Which should show a window like this in the "files" view of VS Code:
+![MicroPico MPS File System](/assets/mpy_filesystem.PNG)
+
+From here, you can create new folders / files on the Pico directly.
+
+More on this later.
 
 ## Step 6 - Sound
 
