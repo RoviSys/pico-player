@@ -28,19 +28,18 @@ class SoundEngine:
         sound_driver = SingleBuzzerDriver(self._sound_logger, self._sound_gpio)
         self._sound_provider = SoundProvider(sound_driver)
 
-
     def start_playback_listener(self, song: Song):
         self._song = song
         _thread.stack_size(8*1024)
         _thread.start_new_thread(self._button.listen, [self._trigger_song])
-    
+
     def _trigger_song(self):
         self._play_song(self._song)
-    
+
     def _play_song(self, song: Song):
         self._sound_provider.play_song(song)
         self._sound_provider.stop_sound()
-        self.stop_playback_listener() # Play one time
+        self.stop_playback_listener()  # NOTE: Play one time for now
 
     def stop_playback_listener(self):
         self._interrupt()

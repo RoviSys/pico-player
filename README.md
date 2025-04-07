@@ -25,6 +25,15 @@ cd Projects\hackathon
 git clone https://github.com/RoviSys/pico-player.git -b hackathon
 ```
 
+## Opening
+
+Once the repository is cloned:
+
+1. Open Visual Studio Code.
+2. From the File menu, choose the "open workspace from file" menu option.
+3. Navigate to the local location where you cloned the repository.
+4. Open the `pico-player.code-workspace` file.
+
 ## Code Layout
 
 ## Electronics
@@ -32,7 +41,7 @@ git clone https://github.com/RoviSys/pico-player.git -b hackathon
 # Hackathon
 
 ## Step 1 - Setup
-Follow the pre-requisite and setup instructions above to get your local environment configured with all the necessary software.  Once the software is installed, clone the repository.
+Follow the pre-requisite and setup instructions above to get your local environment configured with all the necessary software.  Once the software is installed, clone the repository, and open VS Code (as described above).
 
 ## Step 2 - Lint / Testing
 Python is an interpreted language.  This means that an interpreter reads the source code you write and runs it line-by-line, there is no compilation step.  Python commands and code are run from command line via the `python` executable that is installed when you installed Python on your machine.  Extra components for Python can be installed globally, or through a virtual environment (venv).  A virtual environment is useful if you need to run different versions of Python for different reasons.  The virtual environment enables you to configure / install dependencies LOCAL to the environment, so you don't wind up with conflicts in your global Python installation.
@@ -42,7 +51,14 @@ In the source code, the .venv folder contains the virtual environment configurat
 
 ![Switch to PowerShell](/assets/new_powershell.PNG)
 
+With `PowerShell` as your current terminal (you can switch between terminal sessions) and in the root of the project, start typing `Li` and hit the `tab` key.  The tab key will auto-complete what you were typing based on what is currently in the directory.  If this works, it should have put `.\lint.ps1` in the prompt.  If so, hit the `Enter` key to execute the command.
+
+This Python project has been configured with `flake8`, a static analysis linting tool used to check the syntax of the source code to make sure it follows accepted conventions and styles.  This is a useful way to make sure code remains clean, well-organized, and easier to maintain.  The linter should have no output and is configured to only check things in the `/src` folder of the repository.
+
 ## Step 3 - Pico Setup
+
+Now that we have our environment setup, it's time to switch gears to some hardware.
+
 ![Pico Breadboard](/assets/pico_player_wiring_no_rails.jpg)
 
 Place the pico in the middle so there are an even number of open pin-holes on either side and the USB port is easily accessible.  From here, plug the USB cable into the Pico, then the other end into a USB port on your laptop.  Your setup should look like this:

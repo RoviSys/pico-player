@@ -32,11 +32,11 @@ class LightEngine:
         time.sleep(duration)
         self._light_manager.hide_all()
         self._light_logger.debug('done')
-    
+
     def run(self):
-        while self._interrupt() == False:
+        while self._interrupt() is False:
             self.rainbow_cycle(0)
-            
+
         self.all_off()
 
     def rainbow_cycle(self, wait: float):
