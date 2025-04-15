@@ -398,7 +398,8 @@ At this point, your board should look like this:
 ## Step 8 - Mozart
 
 # Resources
-- MicroPython documentation for RP2040 (Pico): 
+- MicroPython documentation for RP2040 (Pico): https://docs.micropython.org/en/latest/rp2/quickref.html
+- MicroPython SDK documentation: https://docs.micropython.org/en/latest/library/index.html
 
 # Contributing
 
