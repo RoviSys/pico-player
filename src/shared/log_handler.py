@@ -4,25 +4,32 @@ from log_formatter import (LogFormatter)
 
 
 class LogHandler:
+    """Abstract class used for inherited classes that handle log specifics for a platform / output."""
     _formatter: LogFormatter
+    _level: int
 
     def __init__(self, level=LogLevel.DEBUG, formatter=LogFormatter()):
-        self.level = level
-        self.formatter = formatter
+        """Initializes a new instance of the LogHandler class.
+        :param level: The minimum level to record logs for (only logs at or above this level are shown.)
+        :param formatter: The LogFormatter instance used to format messages on the output log."""
+        self._level = level
+        self._formatter = formatter
 
     def close(self):
+        """Performs any cleanup / close operations on the log handler (if any)."""
         pass
 
-    def set_level(self, level: LogLevel):
-        self.level = level
+    def set_level(self, level: int):
+        """Allows the log level to be changed after the handler has been created.
+        :param level: The new log level to configure."""
+        self._level = level
 
-    def set_formatter(self, formatter: LogFormatter):
-        self.formatter = formatter
-
-    def format(self, record: LogRecord) -> str:
-        return self.formatter.format(record)
+    def format_output(self, record: LogRecord) -> str:
+        """Performs output formatting of the record prior to logging.
+        :param record: The LogRecord instance being logged."""
+        return self._formatter.format_message(record)
 
     def emit(self, record: LogRecord):
-        """Emits the error
+        """Emits the error.  Designed to be overridden with specific logic in inherited classes.
         :param record: The LogRecord instance to log"""
         pass

@@ -10,11 +10,12 @@ class SingleBuzzerDriver(SoundDriver):
 
     _buzzer: PWM
 
-    def __init__(self, logger: Logger, gpio_num: int):
+    def __init__(self, logger: Logger, gpio_num: int, adjusted_volume: float | None = None):
         """Initializes a new instance of the SingleBuzzerDriver class.
         :param logger: The Logger instance used to write log messages.
-        :param gpio_number: The gpio number on which the buzzer driver is configured."""
-        super().__init__(logger)
+        :param gpio_number: The gpio number on which the buzzer driver is configured.
+        :param adjusted_volume: The volume adjustment for tones."""
+        super().__init__(logger, adjusted_volume)
         self._buzzer = PWM(Pin(gpio_num), duty_u16=int(constants.MAX_INT//2))
         self._buzzer.init()
 
@@ -34,7 +35,7 @@ class SingleBuzzerDriver(SoundDriver):
             duration = self._get_duration(tone_data)
             self._logger.debug("Playing " + tone_data[0] + " for " + str(duration) + " seconds with a duty cycle of " + str(tones[tone_data[0]]) + ".")
             self._buzzer.freq(tones[tone_data[0]])
-            self._buzzer.duty_u16(tone_data[2])
+            self._buzzer.duty_u16(self._calculate_volume(tone_data[2]))
             time.sleep(duration)
         else:
             self._logger.warn("An unrecognized tone was given: " + str(tone_data[0]) + ".")
