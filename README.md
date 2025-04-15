@@ -375,7 +375,17 @@ More on this later.
 
 ## Step 6 - Sound
 
+A Piezo buzzer is a low-cost electronic component that creates sound from deforming a ceramic material when voltage is applied.  Different voltages cause vibrations at different rates that result in differences in the tone produced.  To vary this electric voltage, we use a process called pulse-width-modulation (PWM).  The Raspberry Pi Pico can support up to 8 independent PWM devices.  PWM can occur when a PWM-controllable component is attached to any "light green" labelled GPIO pin. 
+
+For further reading on PWM: https://control.com/technical-articles/understanding-the-basicsof-pulse-width-modulation-pwm/
+
+For our purposes, the Piezo buzzer is polarized, which means the leads can only be connected in one way.  Typically the buzzer has the "+" and "-" leads marked on top.  Typically, the longer pin is the anode "+", while the shorter is cathode ("-") if the buzzer is not labelled.
+
+Add a buzzer as shown in the diagram below.
+
 ![Pico Sound Wiring](/assets/pico_player_wiring_no_button.jpg)
+
+
 ![Pico Sound Wiring Photo](/assets/pico_sound_ph.jpg)
 
 ## Step 7 - Control
