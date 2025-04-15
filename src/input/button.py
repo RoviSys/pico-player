@@ -25,7 +25,7 @@ class Button:
         """Use this method to provide a callback that is executed when the button is pressed.
         :param handler: A function to execute when the button is pressed."""
         while self._interrupt is False:
-            if self._pin.value() is True:
+            if self._pin.value() == 1:
                 current_time = time.ticks_ms()
 
                 time_passed = time.ticks_diff(current_time, self._debounce_timer)
@@ -35,5 +35,4 @@ class Button:
                     handler()
                 else:
                     self._logger.debug("Debounce Detection")
-
         self._logger.debug("Hanging up the phone")

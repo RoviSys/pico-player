@@ -1,4 +1,4 @@
-from lighting import (LEDManager)
+from lighting import (LEDManager, RP2LEDManager, ESP32LEDManager)
 from shared import (Logger, LogLevel)
 from drivers import (create_state_machine)
 import rp2
@@ -14,7 +14,7 @@ class LightEngine:
     _light_logger: Logger
     _light_manager: LEDManager
 
-    def __init__(self, led_gpio: int, led_names: list[str], interrupt, default_brightness: float = 0.5):
+    def __init__(self, led_gpio: int, led_names: list[str], interrupt, default_brightness: float = 0.5, rp2_board: bool = True):
         self._default_brightness = default_brightness
         self._led_gpio = led_gpio
 
@@ -22,7 +22,10 @@ class LightEngine:
         self._sm.restart()
         self._sm.active(1)
         self._light_logger = Logger('lights', LogLevel.INFO)
-        self._light_manager = LEDManager(self._sm, led_names, self._light_logger)
+        if (rp2_board):
+            self._light_manager = RP2LEDManager(self._sm, led_names, self._light_logger)
+        else:
+            self._light_manager = ESP32LEDManager(led_gpio, led_names, self._light_logger)
         self._interrupt = interrupt
 
     def light_all_for_duration(self, duration: int, color: tuple[int, int, int], brightness: float | None = None):
