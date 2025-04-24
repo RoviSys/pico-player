@@ -40,4 +40,3 @@ class SoundDriver:
             return max_volume
 
         return computed_volume
-        

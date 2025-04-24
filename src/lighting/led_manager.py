@@ -1,8 +1,6 @@
-import array
 from shared import Logger
 from led_array import (LEDArray)
 from led import (LED)
-import rp2
 import time
 
 
