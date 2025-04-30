@@ -620,10 +620,113 @@ while True:
 
 ```
 
-You'll note that even pressing the button while the sequence is running does nothing.  This is because we're only using 1 of the threads the Pico can run (it can handle 2 threads).  So while the instructions for the lights are running, the Pico can't simultaneously listen for button press events.
-
+You'll note that even pressing the button while the sequence is running does nothing.  This is because we're only using 1 of the threads the Pico can run (it can handle 2 threads).  So while the instructions for the lights are running, the Pico can't simultaneously listen for button press events, yet...
 
 ## Step 8 - Mozart
+
+We now have all of the basic components necessary to build an "analog" music player.  To accomplish this, we'll use bits of everything we've done so far.  So far in this hackathon, we've done everything running locally from Visual Studio Code or your workstation.  As was mentioned previously, this code file has now gotten fairly large and can start to be cumbersome to manage.  To simplify that, this repository has a whole series of Python modules used to organize the different responsibilities of the system.
+
+The .micropico file in the root of the repo tells VSCode that this folder can use the MicroPico VS Code Extension you installed.  The `pico-player.code-workspace` file has a setting: `micropico.syncFolder` that makes this even easier.  With your `Mpy FS` enabled, you can right click on the `src` folder (or any file in src) and the context menu has an option for `Upload project to Pico`.  This will transfer all of the files in the src folder to the connected Raspberry Pi Pico.  Do this now.
+
+After this is complete, you'll be able to see the entire structure of folders on the Raspberry Pi Pico file-system.
+
+Each folder represents a Python `module` used for grouping similar code.  These modules can then be exported and imported for use in other modules.  The `sound` module contains all code files, classes, and constants that deal with the musical / physical aspects of producing sound.  Much of the code you wrote in the last step has been put into these files in a more object-oriented way.  The `sound_driver.py` file is a `base class` from which different drivers can be written.  This enables the application to support different types of audio output in the future.  The basic implementation we have right now is in the `single_buzzer_driver.py` file with the `SingleBuzzerDriver` class, which provides low-level `PWM` control of a single buzzer.
+
+Likewise, the `lighting` module handles the data structures used for organizing the LEDs in an easy-to-address package.
+
+The `drivers` module handles Pico-specific behavior like controlling the internal state machine to drive LEDs, or interact with the on-board LED / temperature sensor.
+
+The `engines` module has the primary "logic" for our music player, with code that is independent of the hardware we're running on to control our player.
+
+With all of that in mind and our Pico primed, the last step is to start our masterpiece.
+
+Add the following code to a new file called: `media_player.py`, save that file to the root of the src folder.
+
+```python
+
+import sys
+import machine
+sys.path.append('shared/')
+sys.path.append('drivers/')
+sys.path.append('lighting/')
+sys.path.append('engines/')
+sys.path.append('sound/')
+sys.path.append('input/')
+from drivers import (PiPico)
+from engines import (LightEngine, SoundEngine)
+from sound import (Song)
+
+
+# Temple of Time theme song from -- "The Legend of Zelda: Ocarina of Time"
+song = Song([("A5", 1, 5000), ("D4", 1, 5000), ("P", 1, 5000), ("F4", 1, 5000), ("A5", 1, 5000), ("D4", 1, 5000), ("P", 1, 5000), ("F4", 1, 5000), ("A5", .5, 5000), ("C5", .5, 5000), ("B5", 1, 5000), ("G4", 1, 5000), ("F4", .5, 5000), ("G4", .5, 5000), ("A5", 1, 5000), ("D4", 1, 5000), ("C4", .5, 5000), ("E4", .5, 5000), ("D4", 2, 5000)])
+master_volume = 1  # A percentage
+program_exit = False
+led_gpio = 15
+buzzer_gpio = 16
+button_gpio = 17
+global_brightness = 0.5
+
+
+def should_exit() -> bool:
+    """A function used to return a global variable in a more specific scope.  This method is passed as an argument to things that
+    need to periodically check the value."""
+    global program_exit
+    return program_exit
+
+
+def do_exit():
+    """A trigger function that alters the state of the program_exit global variable, causing state changes in downstream code to force it to quit."""
+    global program_exit
+    program_exit = True
+
+
+pico = PiPico(True, True)
+pico.turn_led_on()
+print("Starting Temperature: %d°F" % (pico.read_temperature()))
+light_engine = LightEngine(led_gpio, ["1", "2", "3"], should_exit, global_brightness)
+sound_engine = SoundEngine(buzzer_gpio, button_gpio, do_exit, program_exit, master_volume)
+
+
+def cleanup():
+    """Cleanly closes the program while attached to VSCode."""
+    global light_engine
+    global pico
+    light_engine.all_off()
+    pico.turn_led_off()
+    print("Ending Temperature: %d°F" % (pico.read_temperature()))
+    machine.reset()  # We do this during testing to make sure we can re-upload if there are problems without unplugging the Pico or restarting VS Code
+    sys.exit(0)
+
+
+try:
+    sound_engine.start_playback_listener(song)
+    light_engine.run()  # Last to run, blocks the main thread
+    cleanup()
+except KeyboardInterrupt:
+    sys.exit(1)
+
+```
+
+Several notes on this listing:
+
+1. The `pico = PIPico(True, True)` line will have both values set to `False` if you're using a standard Raspberry Pi Pico.  They can be left as `True` if you're using a Pico W.
+2. The main entry point is in the last `try / except` block where we start the listener on the engine (thread #1) that waits for the button to be pressed and start the light engine (thread #2).
+3. Change the line that initializes the `light_engine` to match the number of LEDs you have configured.  The code provided assumes three LEDs.  The values in the array are "names" of those LEDs so they can be referred to directly without needing to memorize the index.  For example, if you modified the code for the lights to have more meaning, your array could look like: `["power", "note_played"]` <-- Which would indicate that there are TWO LEDs in the array, with the first being used for power and the second being illuminated when a note is played
+
+Now it's your turn.  There is a `tones.py` file that maps the frequency of the buzzer to every note of the musical scale.  In the `song = Song()` line of the listing above, each "note" of the song is a tuple with three values:
+
+1. Music note
+2. Duration (whole note, half note, etc..)
+3. Volume
+
+To win the hackmaster trophy you can do one of TWO approaches:
+
+1. Write the best song of your peers (either by replicating a song of your choosing using sheet-music for example or your own unique composition).
+2. Enhance the sound system by adding a driver that can handle TWO different buzzers on two different GPIOs with two different notes (to play chords) at the same time
+
+For challenge #1, simply modify the array argument to the `Song()` class constructor with your composition.
+
+#2 is a more challenging programming task.  Good luck!
 
 # Resources
 - MicroPython documentation for RP2040 (Pico): https://docs.micropython.org/en/latest/rp2/quickref.html
