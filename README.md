@@ -124,6 +124,8 @@ If successful, you should see the on-board LED turn on:
 
 Congratulations, you've complete the "Hello, World!" equivalent of a Raspberry Pi Pico with MicroPython.
 
+> IMPORTANT NOTE: Sometimes a Pico's on-board LED is bad.  At least one kit has a bad LED.  If you did NOT get an error when running the code above, you might have a bad LED.  To check, you can use a multi-meter with a continuity check on the contacts of the LED (though it's quite tiny), OR you can try `print("%d"  % (Pin(25, Pin.OUT).value()))` for Pico or `print("%d" % (Pin("LED", Pin.OUT).value()))` respectively for Pico W, which will show the current state of the on-board LED as far as the micro-controller is concerned.  If you turn it on, and print a value of 1 but the light isn't on, it might be bad.
+
 ## Step 4 - Rails
 The Raspberry Pi Pico can be powered through several different mechanisms:
 
@@ -183,7 +185,9 @@ As we mentioned before, these are not your average LEDs.  These are `WS2812` LED
 
 You may have noticed that with your Pico plugged in and your LEDs wired that the first one is illuminated (often blue).  This is because it's receiving power but not data.  To address this let's write some code that uses the state machine of the Pico.
 
-Add this to your source file:
+Some of the code below has comments with line numbers on it to make it easier to reference in the following sections.
+
+Add this to your source file to start, note that this code by itself doesn't do anything yet:
 
 ```python
 import rp2
@@ -221,11 +225,11 @@ This is the base code for the state machine.  The `rp2` import enables us to use
 
 Next, we have the `create_state_machine` method, which takes in a GPIO Pin Number as an argument, sets the frequency the LEDs run at and provides the `ws2812` method to the state machine for controlling the timings.
 
-To make all of this work we need a bit more code.  Add the following lines of code:
+To make all of this work we need a bit more code.  Add the following lines of code after:
 
 ```python
 
-# Configure the number of WS2812 LEDs.
+# Configure the number of WS2812 LEDs to the number you have wired up.
 NUM_LEDS = 2
 PIN_NUM = 15 # The gpio we have the LED hooked to above
 brightness = 0.5 # These are bright, so you might want to drop this down further.  A number between 0 and 1
@@ -505,7 +509,7 @@ def fade_sound_out(starting_volume: int) -> int:
 
     return i
 
-fade_sound_out(fade_sound_in())
+fade_sound_out(fade_sound_in(0))
 buzzer.deinit()
 
 ```
