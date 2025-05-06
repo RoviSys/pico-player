@@ -95,6 +95,10 @@ For the Pico, there are two flavors for the Pico 1:
 
 > For more detailed instructions, see here: https://docs.micropython.org/en/latest/rp2/tutorial/intro.html
 
+> Troubleshooting Steps:
+> - [Issue #1](#issue-1)
+> - [Issue #2](#issue-2)
+
 ### Hello, World!
 At this point, your VS Code should automatically detect the new Pico and connect to it using the Pico VS Code Extension.  If it does not, try closing the workspace and re-opening it (with the Pico plugged in and the firmware loaded).  You can confirm this as a new terminal instance will pop up that looks like this:
 
@@ -124,6 +128,8 @@ If successful, you should see the on-board LED turn on:
 
 Congratulations, you've complete the "Hello, World!" equivalent of a Raspberry Pi Pico with MicroPython.
 
+> IMPORTANT NOTE: Sometimes a Pico's on-board LED is bad.  At least one kit for this hackathon has a bad LED. For help in troubleshooting this, see [Issue #3](#issue-3) in the [Troubleshooting](#troubleshooting) section.
+
 ## Step 4 - Rails
 The Raspberry Pi Pico can be powered through several different mechanisms:
 
@@ -151,9 +157,9 @@ Please see the images below for diagrams and example wiring.
 
 ### Electronics
 
-These are WS2818 (PL9823) LEDs and they need *5V* power with 25mA max current.  These LEDs are shift-register LEDs that are individually addressable via a tiny, embedded micro-controller within the LED that does the bit shifting for colors for you.  The color and brightness and color value is sent via the `DIN` or Data In lead, `PWR` goes to the second lead, `GND` goes to the third lead, and `DOUT` or Data Out is the fourth.  By connecting the in / out of successive LEDs, we can create an array of addressable LEDs.
+These are WS2818 (PL9823) LEDs and they need *5V* power with `25mA` max current.  These LEDs are shift-register LEDs that are individually addressable via a tiny, embedded micro-controller within the LED that does the bit shifting for colors for you.  The color and brightness and color value is sent via the `DIN` or Data In lead, `PWR` goes to the second lead, `GND` goes to the third lead, and `DOUT` or Data Out is the fourth.  By connecting the in / out of successive LEDs, we can create an array of addressable LEDs.
 
-LEDs have polarity, which means it matters which lead is connected to ground ("-"), black, and which is connected to hot ("+"), red.  If you reverse them or accidentally connect leads to each other, this can create a short on the circuit which can cause the LED to fail / pop / burn.  To figure out which is which we often need to consult the data sheet.  Below is the portion of the data sheet that helps us understand which lead is for which purpose depending on which package of the LED you have (they are often shipped from different manufacturers with different packages that result in slight differences).
+LEDs have polarity, which means it matters which leg is connected to ground ("-"), black, and which is connected to hot ("+"), red.  If you reverse them or accidentally connect legs to each other, this can create a short on the circuit which can cause the LED to fail / pop / burn.  To figure out which is which we often need to consult the data sheet.  Below is the portion of the data sheet that helps us understand which lead is for which purpose depending on which package of the LED you have (they are often shipped from different manufacturers with different packages that result in slight differences).
 
 ![PL9823 LED Lead Data Sheet](/assets/led_lead_layout.png)
 
@@ -178,14 +184,17 @@ Having loaded the `*.uf2` firmware onto the Pico and with VSCode connected, you 
 
 As we mentioned before, these are not your average LEDs.  These are `WS2812` LEDs that have controllers built-in to make changing colors easier from just software.  To do this, we need several different components:
 
-1. The Raspberry Pi Pico has an internal state machine that can be used to control / time the register on each LED
-2. This state machine is exposed via a MicroPython extension that is SPECIFIC to the Raspberry Pi Pico
+1. The Raspberry Pi Pico has an internal state machine that can be used to control / time the register on each LED.
+2. This state machine is exposed via a MicroPython extension that is SPECIFIC to the Raspberry Pi Pico.
 
 You may have noticed that with your Pico plugged in and your LEDs wired that the first one is illuminated (often blue).  This is because it's receiving power but not data.  To address this let's write some code that uses the state machine of the Pico.
 
-Add this to your source file:
+Some of the code below has comments with line numbers on it to make it easier to reference in the following sections.
+
+Add this to your source file to start, note that this code by itself doesn't do anything yet:
 
 ```python
+
 import rp2
 from machine import (Pin)
 import array, time
@@ -221,11 +230,11 @@ This is the base code for the state machine.  The `rp2` import enables us to use
 
 Next, we have the `create_state_machine` method, which takes in a GPIO Pin Number as an argument, sets the frequency the LEDs run at and provides the `ws2812` method to the state machine for controlling the timings.
 
-To make all of this work we need a bit more code.  Add the following lines of code:
+To make all of this work we need a bit more code.  Add the following lines of code after:
 
 ```python
 
-# Configure the number of WS2812 LEDs.
+# Configure the number of WS2812 LEDs to the number you have wired up.
 NUM_LEDS = 2
 PIN_NUM = 15 # The gpio we have the LED hooked to above
 brightness = 0.5 # These are bright, so you might want to drop this down further.  A number between 0 and 1
@@ -301,6 +310,11 @@ deactivate_array()
 After entering the code above into your file, click the "Run" button in the status bar of VS Code to send the file to the REPL (and for the Pico to run).
 
 Did you get the LEDs to light up?  Try experimenting with the colors.  Set different pixels to different colors or even create your own colors.
+
+> Troubleshooting Steps:
+> - [Issue #4](#issue-4)
+> - [Issue #5](#issue-5)
+> - [Issue #6](#issue-6)
 
 You can also create effects with the LEDs using simple control structures and some math.
 
@@ -505,7 +519,7 @@ def fade_sound_out(starting_volume: int) -> int:
 
     return i
 
-fade_sound_out(fade_sound_in())
+fade_sound_out(fade_sound_in(0))
 buzzer.deinit()
 
 ```
@@ -731,6 +745,78 @@ For challenge #1, simply modify the array argument to the `Song()` class constru
 # Resources
 - MicroPython documentation for RP2040 (Pico): https://docs.micropython.org/en/latest/rp2/quickref.html
 - MicroPython SDK documentation: https://docs.micropython.org/en/latest/library/index.html
+
+# Troubleshooting
+If you run into issues, no worries as that's part of the fun!!...  Below is a list of commonly experienced issues as well as their possible solutions.
+
+## Issue (1)
+MicroPython not loading.
+### Causes
+- Incorrect uf2 firmware installed on the Pico (often a mis-match between Pico and Pico W).
+### Solution
+1. Unplug the Pico USB from the workstation.
+2. Hold down the `BOOTSEL` button.
+3. While holding the button down, plug the USB cable back into the workstation.
+4. The Pico should once again show up in your computer manager.
+
+## Issue (2)
+Device not showing in your computer explorer when you plug it in.
+### Causes
+- uf2 has already been installed previously.
+### Solution
+See solution for Issue (1).
+
+## Issue (3)
+On-board LED won't illuminate.
+### Causes
+- Mis-match of the use of Pin # `25` vs. named Pin: "LED".
+- Bad LED.
+### Solutions
+- Try using a different way of addressing the LED Pin (either 25 or "LED").
+- Unplug the Pico from USB and re-run the code.
+- Check the code for syntax errors.
+- Use a multi-meter with a continuity check on the contacts of the LED (though it's quite tiny).
+- Try using: `print("%d" % (Pin(25, Pin.OUT).value()))` for Pico or `print("%d" % (Pin("LED", Pin.OUT).value()))` respectively for Pico W in the REPL, which will show the current state of the on-board LED as far as the micro-controller is concerned.  If you turn it on, and print a value of 1 but the light isn't on, it might be bad.
+
+## Issue (4)
+Code won't run / error about Python itself.
+### Causes
+- Not using the "Run" button in the VSCode status bar.
+### Solutions
+- For those familiar with Python, it's tempting to run your script from the REPL or from command-line, but this will not work with the Pico (without some modification).
+- Ensure you use the "Run" button in the VS Code status bar and that the code file you have in your editor has correct syntax.
+
+## Issue (5)
+Can't import / find module: "module name".
+### Causes
+- Not having files copied to the file-system of the Pico.
+- Using a Python library not supported by the Raspberry Pi Pico.
+### Solutions
+- If your code has import statements for code you wrote, ensure that the file-system of the Pico has those code files in paths that match your import statements.
+- Occasionally, import statements in the `__init__.py` module definition file require a `.` prefix on an import statement for the Pico to be happy with it.
+
+## Issue (6)
+None of / only one WS2812 LED lights up.
+### Causes
+- Numerous
+### Solutions
+- Start by visually inspecting the LED for damage (which are):
+  - Fractured / cracked lens / case.
+  - Scorched, brown or black marks on the inside of the lens where the legs terminate in the lens.
+  - Legs that are disconnected from the base flat portion of the lens.
+  - Use a multi-meter to do a continuity test between DIN / DOUT, + / -.
+- Next, confirm:
+  - Your *5v* rail is correctly connected from **VSYS**.
+  - Your *GND* rail is correctly connected to on of the Pico GND pins listed on the pinout diagram.
+  - Your anode (power) leg of your LED (consult the data sheet for correct leg) is correctly connected to the *5v* power rail.
+  - Your cathode (neg) leg of your LED (consult the data sheet for correct leg) is correctly connected to the *GND* rail.
+  - Your Data in (DIN) leg of your LED (consult the data sheet for correct leg) is tied to the PIN on the Pico your code is sending data to (or the output Pin of the previous LED).
+  - Your LED is firmly (but not with too much force) inserted into the breadboard pinholes.
+  - None of the LED legs are touching each other.
+- If this doesn't resolve it, test the LED by swapping in a working LED
+  - If both LEDs work in the first slot / configuration, the issue is likely a bad connection between your DOUT of LED #1 and DIN of LED #2 or PWR / GND
+  - Use a multi-meter to confirm
+- Check your code to ensure you've told the state machine the correct number of LEDs in your array
 
 # Contributing
 
